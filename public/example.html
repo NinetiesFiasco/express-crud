@@ -1,0 +1,141 @@
+<head>
+  <title>CRUD example</title>
+  <script>
+let dialog
+let editor
+let tableParent
+let id
+let tableData
+
+window.onload = () => {
+  dialog = document.querySelector('#dialog')
+  editor = document.querySelector('#editor')
+  tableParent = document.querySelector('#table')
+  id = document.querySelector('#id')
+
+  document.querySelector('#create').onclick = create
+  document.querySelector('#read').onclick = read
+  document.querySelector('#update').onclick = update
+  document.querySelector('#delete').onclick = _delete
+}
+
+const url = '/api/example'
+const headers = {
+  'Accept': 'application/json',
+  'Content-Type': 'application/json'
+}
+
+const create = async function() {
+  const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({data: editor.value})
+    }
+  )
+  const data = await response.text()
+  dialog.innerText = data
+}
+
+const read = async function() {
+  const response = await fetch(url, {
+    method: 'GET',
+    headers
+  })
+  tableData = await response.json()
+
+  createTable(tableData)
+}
+
+const update = async function() {
+  const response = await fetch(url + '/' + id.value, {
+    method: 'PUT',
+    body: JSON.stringify({data: editor.value}),
+    headers
+  })
+  const data = await response.text()
+  dialog.innerText = data
+}
+
+const _delete = async function(e) {
+  const index = e.target.getAttribute('index')
+  const response = await fetch(url + '/' + tableData[index]._id, {
+    method: 'DELETE',
+    headers
+  })
+  const data = await response.text()
+  dialog.innerText = data
+}
+
+const startEdit = function(e) {
+  const index = e.target.getAttribute('index')
+  
+  id.value = tableData[index]._id
+  editor.value = tableData[index].data
+}
+
+const createTable = function(data) {
+  tableParent.innerHTML = '';
+  const table = document.createElement('table')
+  const thead = document.createElement('thead')
+  const tr = document.createElement('tr')
+  const th1 = document.createElement('th')
+  th1.innerText = 'id'
+  const th2 = document.createElement('th')
+  th2.innerText = 'text'
+  const th3 = document.createElement('th')
+  th3.innerText = 'action'
+
+  tr.appendChild(th1)
+  tr.appendChild(th2)
+  tr.appendChild(th3)
+  thead.appendChild(tr)
+
+  const tbody = document.createElement('tbody')
+  for (let i = 0; i < data.length; i++) {
+    const tr = document.createElement('tr')
+    const td1 = document.createElement('td')
+    td1.innerText = data[i]._id
+    const td2 = document.createElement('td')
+    td2.innerText = data[i].data
+    const td3 = document.createElement('td')
+    
+    const button1 = document.createElement('button')
+    button1.innerText = 'edit'
+    button1.setAttribute('index', i)
+    button1.onclick = startEdit
+
+    const button2 = document.createElement('button')
+    button2.innerText = 'delete'
+    button2.setAttribute('index', i)
+    button2.onclick = _delete
+
+    td3.appendChild(button1)
+    td3.appendChild(button2)
+    tr.appendChild(td1)
+    tr.appendChild(td2)
+    tr.appendChild(td3)
+    tbody.appendChild(tr)
+  }
+
+  table.appendChild(thead)
+  table.appendChild(tbody)
+
+  tableParent.appendChild(table)
+}
+  </script>
+</head>
+
+<body>
+  hi here
+  <button id="create" >create</button>
+  <button id="read" >read</button>
+  <button id="update">update</button>
+  <button id="delete">delete</button>
+
+  <input id="editor" />
+  <input id="id"/>
+
+  <div id="dialog"></div>
+
+  <div id="table"></div>
+</body>
